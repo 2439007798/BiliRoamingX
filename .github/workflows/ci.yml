@@ -53,15 +53,23 @@ jobs:
           version="${version}.r${commit_count}"
           echo "VERSION=$version" >> $GITHUB_ENV
 
-      - name: Build with gradle
+      - name: Build patches module
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_ACTOR: ${{ github.actor }}
-        run: ./gradlew --no-daemon -Dorg.gradle.jvmargs=-Xmx2g -Pversion=$VERSION -Pgpr.user=$GITHUB_ACTOR -Pgpr.key=$GITHUB_TOKEN dist
+        run: ./gradlew --no-daemon -Dorg.gradle.jvmargs=-Xmx2g -Pversion=$VERSION -Pgpr.user=$GITHUB_ACTOR -Pgpr.key=$GITHUB_TOKEN :patches:build
+
+      - name: Build app release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: ./gradlew --no-daemon -Dorg.gradle.jvmargs=-Xmx2g -Pversion=$VERSION -Pgpr.user=$GITHUB_ACTOR -Pgpr.key=$GITHUB_TOKEN :integrations:app:assembleRelease
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         if: success()
         with:
           name: BiliRoamingX-${{ env.VERSION }}
-          path: 'build'
+          path: |
+            integrations/app/build/outputs/apk/release/
+            patches/build/libs/
